@@ -179,8 +179,6 @@ class Admin {
         global $wpdb;
 
         print_r($_POST);
-        echo "HERE";
-        die();
 
         $table_name = $wpdb->prefix . 'cv_jobs';
         $wpdb->insert(
@@ -194,14 +192,13 @@ class Admin {
 
 
         if( isset( $_POST['cv_add_user_meta_nonce'] ) && wp_verify_nonce( $_POST['cv_add_user_meta_nonce'], 'cv_add_user_meta_form_nonce') ) {
-            $cv_user_meta_key = sanitize_key( $_POST['cv']['user_meta_key'] );
-            $cv_user_meta_value = sanitize_text_field( $_POST['cv']['user_meta_value'] );
-            $cv_user =  get_user_by( 'login',  $_POST['cv']['user_select'] );
-            $cv_user_id = absint( $cv_user->ID ) ;
+            //$cv_user =  get_user_by( 'login',  $_POST['cv']['user_select'] );
 
-
-            // server response
-            $admin_notice = "success";
+            $chk_user = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE wp_user_id = ".$_POST['cv']['user_select']);
+            if ($chk_user == 0)
+                $admin_notice = "new_user";
+            else
+                $admin_notice = "edit_user";
 
             $this->custom_redirect( $admin_notice, $_POST );
             exit;
@@ -237,21 +234,36 @@ class Admin {
      * @since    1.0.0
      */
     public function print_plugin_admin_notices() {
+        GLOBAL $step;
+        ?>
+        <h2><?php _e( 'CV Builder', $this->plugin_name ); ?></h2>
+        <?php
+
+        // Are we adding or editing a user? And who are they?
         if ( isset( $_REQUEST['cv_admin_add_notice'] ) ) {
-            if( $_REQUEST['cv_admin_add_notice'] === "success") {
-                $html =	'<div class="notice notice-success is-dismissible"> 
-							<p><strong>The request was successful. </strong></p><br>';
-                $html .= '<p>-'.$testvar.'-</p>';
-                $html .= '<pre>' . htmlspecialchars( print_r( $_REQUEST['cv_response'], true) ) . '</pre></div>';
-                echo $html;
-            }
+            if ($_REQUEST['cv_admin_add_notice'] === "new_user" ||
+                $_REQUEST['cv_admin_add_notice'] === "edit_user") {
+                $user = get_user_by('id', $_REQUEST['cv_response']['cv']['user_select']);
 
-            // handle other types of form notices
+                if (isset($user->first_name) || isset($user->last_name)) {
+                    $name = $user->first_name . ' ' . $user->last_name;
+                } else {
+                    $name = $user->login;
+                }
 
+                if ($_REQUEST['cv_admin_add_notice'] === "new_user") {
+                    $html = 'Creating CV for ' . $name . ' </strong></p><br>';
+                    $step = "1a";
+                }
+                else {
+                    $html = 'Editing CV for ' . $name . ' </strong></p><br>';
+                    $step = "1b";
+                }
+            } else
+                $html = "";
         }
-        else {
-            return;
-        }
+        echo $html;
+
 
     }
 

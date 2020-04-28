@@ -112,9 +112,10 @@ class Init {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
         //Add a top-level admin menu for our plugin
+
+        $this->loader->add_action( 'admin_notices', $plugin_admin, 'print_plugin_admin_notices');
         $this->loader->add_action( 'admin_menu', $plugin_admin, 'add_plugin_admin_menu' );
         $this->loader->add_action( 'admin_post_cv_form_response', $plugin_admin, 'the_form_response');
-        $this->loader->add_action( 'admin_notices', $plugin_admin, 'print_plugin_admin_notices');
 
 		/*
 		 * Additional Hooks go here
